@@ -1,0 +1,25 @@
+[package]
+name = "para-cli"
+version = "0.1.0"
+edition = "2021"
+authors = ["Mathias Alexander <mathias@mathias-alexander.com>"]
+description = """
+CLI utility for use with the PARA method.
+For more on the PARA method, see https://fortelabs.com/blog/para/
+"""
+
+[[bin]]
+name = "para"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0.93"
+clap = { version = "4.5.21", features = ["derive"] }
+clap-verbosity-flag = "3.0.1"
+confy = "0.6.1"
+directories = "5.0.1"
+env_logger = "0.11.5"
+fs_extra = "1.3.0"
+indicatif = "0.17.9"
+log = "0.4.22"
+serde = { version = "1.0.215", features = ["derive"] }
