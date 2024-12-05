@@ -19,6 +19,30 @@ cargo install --git https://github.com/mrasore98/para-cli.git
 
 or clone this repo and build from source.
 
+# Usage
+
+```
+para-cli 0.1.0
+
+CLI utility for use with the PARA method.
+For more on the PARA method, see https://fortelabs.com/blog/para/
+
+Author: Mathias Alexander <mathias@mathias-alexander.com>
+
+Usage: para [OPTIONS] <COMMAND>
+
+Commands:
+  init     Initialize the PARA directories in the current working directory
+  new      Create a new folder in one of the PARA folders with a provided name
+  archive  Send the files/folders at the provided paths to the Archives
+  help     Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose...  Increase logging verbosity
+  -q, --quiet...    Decrease logging verbosity
+  -h, --help        Print help
+  -V, --version     Print version
+```
 # Example
 ```
 ~/Documents/PARA
@@ -55,29 +79,4 @@ my_project
 ~/Documents/PARA
 ❯ ls 0_Projects
 
-```
-
-# Usage
-
-```
-para-cli 0.1.0
-
-CLI utility for use with the PARA method.
-For more on the PARA method, see https://fortelabs.com/blog/para/
-
-Author: Mathias Alexander <mathias@mathias-alexander.com>
-
-Usage: para [OPTIONS] <COMMAND>
-
-Commands:
-  init     Initialize the PARA directories in the current working directory
-  new      Create a new folder in one of the PARA folders with a provided name
-  archive  Send the files/folders at the provided paths to the Archives
-  help     Print this message or the help of the given subcommand(s)
-
-Options:
-  -v, --verbose...  Increase logging verbosity
-  -q, --quiet...    Decrease logging verbosity
-  -h, --help        Print help
-  -V, --version     Print version
 ```
