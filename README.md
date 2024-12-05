@@ -71,19 +71,3 @@ Options:
   -h, --help        Print help
   -V, --version     Print version
 ```
-
-# Example
-
-
-
-# Commands
-
-- `init`
-  - sets current directory as root directory
-  - creates folders for Projects, Areas, Resources, Archives in current directory
-
-- `new`
-  - creates a new folder in projects, areas, or resources depending on user-provided flag
-
-- `archive`
-  - Move the provided file/folder to the Archives
