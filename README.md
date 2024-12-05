@@ -9,6 +9,16 @@ using these folders.
 The location of the PARA folders is saved in a configuration file so users can perform file operations
 from anywhere on their system without having to reference the paths to the PARA folders directly.
 
+# Install
+
+To install `para-cli`, run the following command
+
+```
+cargo install --git https://github.com/mrasore98/para-cli.git
+```
+
+or clone this repo and build from source.
+
 # Example
 ```
 ~/Documents/PARA
