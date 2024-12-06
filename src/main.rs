@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 
 use para_cli::{
     cli::{Cli, Commands},
-    commands, ParaPaths,
+    core, ParaPaths,
 };
 
 const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
@@ -69,13 +69,24 @@ fn main() -> Result<()> {
         Commands::Init {
             force: _,
             numbered: _,
-        } => commands::handle_init(&para_paths)?,
+        } => core::init(&para_paths)?,
         Commands::New {
             variant,
             name,
             file,
-        } => commands::handle_new(&para_paths, variant, name, file)?,
-        Commands::Archive { paths } => commands::handle_archive(&para_paths.archives, paths)?,
+        } => core::new(&para_paths, variant, name, file)?,
+        Commands::Archive { paths } => core::archive(&para_paths.archives, paths)?,
+        Commands::Path { variant } => core::path(variant, &para_paths),
+        Commands::Move {
+            destination,
+            subfolder,
+            src,
+        } => core::move_(&para_paths, destination, subfolder, src)?,
+        Commands::Copy {
+            destination,
+            subfolder,
+            src,
+        } => core::copy(&para_paths, destination, subfolder, src)?,
     };
     Ok(())
 }

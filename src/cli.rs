@@ -51,6 +51,32 @@ pub enum Commands {
     },
     /// Send the files/folders at the provided paths to the Archives
     Archive { paths: Vec<PathBuf> },
+    /// List paths to PARA folders
+    Path { variant: Option<Para> },
+    /// Move items into PARA folders
+    #[command(name = "mv")]
+    Move {
+        #[arg(short='d', long="destination", value_enum, default_value_t = Para::Projects)]
+        /// Which PARA folder to use as destination.
+        destination: Para,
+        /// Subfolder name within the PARA directory to add to destination path
+        #[arg(short = 's', long = "sub")]
+        subfolder: Option<PathBuf>,
+        /// Name of the file/folder to move.
+        src: Vec<PathBuf>,
+    },
+    /// Copy items into PARA folders
+    #[command(name = "cp")]
+    Copy {
+        #[arg(short='d', long="destination", value_enum, default_value_t = Para::Projects)]
+        /// Which type of PARA folder to use as destination.
+        destination: Para,
+        /// Subfolder name within the PARA directory to add to destination path
+        #[arg(short = 's', long = "sub")]
+        subfolder: Option<PathBuf>,
+        /// Name of the files/folders to copy.
+        src: Vec<PathBuf>,
+    },
 }
 
 #[derive(Debug, Clone, ValueEnum, PartialEq)]

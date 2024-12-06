@@ -1,3 +1,4 @@
+use std::fmt;
 use std::path::{Path, PathBuf};
 
 pub mod cli;
@@ -9,6 +10,16 @@ pub struct ParaPaths {
     pub areas: PathBuf,
     pub resources: PathBuf,
     pub archives: PathBuf,
+}
+
+impl fmt::Display for ParaPaths {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Root:\t\t{:?}\nProjects:\t{:?}\nAreas:\t\t{:?}\nResources:\t{:?}\nArchives:\t{:?}",
+            self.root, self.projects, self.areas, self.resources, self.archives
+        )
+    }
 }
 
 impl ParaPaths {
@@ -32,9 +43,18 @@ impl ParaPaths {
             archives: root_path.clone().join(&paths[3]),
         }
     }
+
+    pub fn get_path(&self, path_type: cli::Para) -> &PathBuf {
+        match path_type {
+            cli::Para::Projects => &self.projects,
+            cli::Para::Areas => &self.areas,
+            cli::Para::Resources => &self.resources,
+            cli::Para::Archives => &self.archives,
+        }
+    }
 }
 
-pub mod commands {
+pub mod core {
     use super::{cli::Para, ParaPaths};
     use anyhow::{anyhow, Context, Result};
     use fs_extra;
@@ -48,7 +68,7 @@ pub mod commands {
     /// Creates new directories for Projects, Areas, Resources, and Archives.
     ///
     /// If the directories already exist, continues trying to create the other directories.
-    pub fn handle_init(para_paths: &ParaPaths) -> Result<()> {
+    pub fn init(para_paths: &ParaPaths) -> Result<()> {
         let paths_to_create = [
             &para_paths.projects,
             &para_paths.areas,
@@ -67,19 +87,9 @@ pub mod commands {
     }
 
     /// Handles the "new" command
-    pub fn handle_new(
-        para_paths: &ParaPaths,
-        variant: Para,
-        name: PathBuf,
-        file: bool,
-    ) -> Result<()> {
+    pub fn new(para_paths: &ParaPaths, variant: Para, name: PathBuf, file: bool) -> Result<()> {
         // Get PARA path according to provided PARA variant
-        let base_path = match variant {
-            Para::Projects => &para_paths.projects,
-            Para::Areas => &para_paths.areas,
-            Para::Resources => &para_paths.resources,
-            Para::Archives => &para_paths.archives,
-        };
+        let base_path = para_paths.get_path(variant);
         if !base_path.exists() {
             return Err(anyhow!("Path {:?} does not exist. Try running `para init` first to create the PARA folders.", base_path));
         }
@@ -94,7 +104,7 @@ pub mod commands {
     }
 
     /// Handles the "archive" command
-    pub fn handle_archive<P: AsRef<Path> + std::fmt::Debug>(
+    pub fn archive<P: AsRef<Path> + std::fmt::Debug>(
         archive_dir: P,
         paths: Vec<PathBuf>,
     ) -> Result<()> {
@@ -115,6 +125,54 @@ pub mod commands {
         // Move items to archive
         fs_extra::move_items_with_progress(&paths, &archive_dir, &options, handle)?;
         prog_bar.finish_and_clear();
+        Ok(())
+    }
+
+    pub fn path(arg: Option<Para>, para_paths: &ParaPaths) -> () {
+        match arg {
+            None => {
+                println!("{}", para_paths);
+            }
+            Some(para) => {
+                let path = para_paths.get_path(para);
+                println!("{:?}", path);
+            }
+        }
+    }
+
+    pub fn move_(
+        para_paths: &ParaPaths,
+        dest: Para,
+        subdir: Option<PathBuf>,
+        src: Vec<PathBuf>,
+    ) -> Result<()> {
+        let base_path = para_paths.get_path(dest);
+        let dest_path = match subdir {
+            Some(sub_path) => base_path.join(sub_path),
+            None => base_path.to_owned(),
+        };
+
+        let options = fs_extra::dir::CopyOptions::new();
+        fs_extra::move_items(&src, dest_path, &options)?;
+
+        Ok(())
+    }
+
+    pub fn copy(
+        para_paths: &ParaPaths,
+        dest: Para,
+        subdir: Option<PathBuf>,
+        src: Vec<PathBuf>,
+    ) -> Result<()> {
+        let base_path = para_paths.get_path(dest);
+        let dest_path = match subdir {
+            Some(sub_path) => base_path.join(sub_path),
+            None => base_path.to_owned(),
+        };
+
+        let options = fs_extra::dir::CopyOptions::new();
+        fs_extra::copy_items(&src, dest_path, &options)?;
+
         Ok(())
     }
 }
