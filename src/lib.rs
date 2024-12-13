@@ -151,6 +151,10 @@ pub mod core {
             Some(sub_path) => base_path.join(sub_path),
             None => base_path.to_owned(),
         };
+        
+        if !dest_path.exists() {
+            fs_extra::dir::create_all(&dest_path, false)?;
+        }
 
         let options = fs_extra::dir::CopyOptions::new();
         fs_extra::move_items(&src, dest_path, &options)?;
@@ -173,6 +177,107 @@ pub mod core {
         let options = fs_extra::dir::CopyOptions::new();
         fs_extra::copy_items(&src, dest_path, &options)?;
 
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhow::Result;
+    use assert_fs::prelude::*;
+    use predicates::prelude::*;
+    
+    fn setup_empty_test_dir() -> (ParaPaths, assert_fs::TempDir) {
+        let temp = assert_fs::TempDir::new().expect("Could not create temp dir");
+        let para_paths = ParaPaths::from_root(temp.path(), false);
+        (para_paths, temp)
+    }
+    
+    fn setup_test_dir_with_para() -> (ParaPaths, assert_fs::TempDir) {
+        let (para_paths, temp) = setup_empty_test_dir();
+        // Create empty para folders
+        for para_path in vec!["Projects", "Areas", "Resources", "Archives"] {
+            temp.child(para_path).create_dir_all().unwrap();
+        }
+        (para_paths, temp)
+    }
+    
+    #[test]
+    fn test_init() -> Result<()>{
+        let (para_paths, temp) = setup_empty_test_dir();
+        assert_eq!(core::init(&para_paths)?, ());
+        for dir in vec!["Projects", "Areas", "Resources", "Archives"] {
+            temp.child(dir).assert(predicate::path::exists());
+        }
+        temp.close()?;
+        Ok(())
+    }
+    
+    #[test]
+    fn test_new_dir() -> Result<()>{
+        let (para_paths, temp) = setup_test_dir_with_para();
+        let new_path = PathBuf::from("nested/dir");
+        core::new(&para_paths, cli::Para::Areas, new_path, false)?;
+        temp.child("Areas/nested/dir").assert(predicate::path::exists());
+        temp.child("Areas/nested/dir").assert(predicate::path::is_dir());
+        temp.close()?;
+        Ok(())
+    }
+    
+    #[test]
+    fn test_new_file() -> Result<()> {
+        let (para_paths, temp) = setup_test_dir_with_para();
+        let new_file = PathBuf::from("new_file");
+        core::new(&para_paths, cli::Para::Resources, new_file, true)?;
+        temp.child("Resources/new_file").assert(predicate::path::exists());
+        temp.child("Resources/new_file").assert(predicate::path::is_file());
+        temp.close()?;
+        Ok(())
+    }
+    
+    #[test]
+    fn test_archive() -> Result<()> {
+        let (para_paths, temp) = setup_test_dir_with_para();
+        temp.child("Projects/test_archive").create_dir_all()?;
+        for i in 0..3 {
+            temp.child(format!("Projects/test_archive/file_{}.txt", i)).touch()?;
+        }
+        core::archive(&para_paths.archives, vec![PathBuf::from(
+            &temp.child("Projects/test_archive").path())])?;
+        temp.child("Archives/test_archive").assert(predicate::path::exists());
+        for i in 0..3 {
+            temp.child(format!("Archives/test_archive/file_{}.txt", i))
+                .assert(predicate::path::exists());
+        }
+        temp.close()?;
+        Ok(())
+    }
+    
+    #[test]
+    fn test_move() -> Result<()> {
+        let (para_paths, temp) = setup_test_dir_with_para();
+        let temp2 = assert_fs::TempDir::new()?;
+        // Create files in temp2, outside PARA folders
+        temp2.child("file1.txt").touch()?;
+        temp2.child("dir1").create_dir_all()?;
+        // Attempt to move files from temp2 to Projects/test_move
+        core::move_(
+            &para_paths,
+            cli::Para::Projects,
+            Some(PathBuf::from("test_move")),
+            vec![
+                temp2.child("file1.txt").path().to_path_buf(),
+                temp2.child("dir1").path().to_path_buf()
+            ])?;
+        // Confirm move
+        assert!(temp.child("Projects/test_move/file1.txt").exists());
+        assert!(temp.child("Projects/test_move/dir1").exists());
+        assert!(!temp2.child("file1.txt").exists());
+        assert!(!temp2.child("dir1").exists());
+        
+        temp.close()?;
+        temp2.close()?;
         Ok(())
     }
 }

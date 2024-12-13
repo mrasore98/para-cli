@@ -60,7 +60,11 @@ fn main() -> Result<()> {
             }
         }
         cfg.use_prefix = numbered;
-        confy::store(PACKAGE_NAME, None, &cfg)?;
+        // Don't save modified settings when testing
+        if !args.test{
+            confy::store(PACKAGE_NAME, None, &cfg)?;
+        }
+        
     }
 
     let para_paths = ParaPaths::from_root(&cfg.root_dir, cfg.use_prefix);

@@ -23,6 +23,8 @@ pub struct Cli {
     pub command: Commands,
     #[command(flatten)]
     pub verbose: Verbosity<InfoLevel>,
+    #[arg(long="test", hide=true,)]
+    pub test: bool
 }
 
 #[derive(Debug, Subcommand, PartialEq)]
